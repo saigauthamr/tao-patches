@@ -32,8 +32,17 @@ Logcat also confirms `App measurement deactivated via the manifest`.
 - One session sent 165 requests, of which 44 duplicated a request still in flight. "Merge duplicate
   requests" sends them once.
 - Each launch pulled 6 sync jobs. "Throttle sync" skipped all 6 on relaunches within 15 minutes.
-- The remaining per-launch requests are mostly per-item lookups (`story/basic`, `story/chapter`, `user`)
-  while the app works through unread notifications.
+- Per-item lookups (`story/basic`, `story/chapter`, `user`) appear while the app works through unread
+  notifications. The app stores story details in its local database and does not look them up again, so a
+  client-side story cache would rarely hit. Over three launches, only the first (a sync refresh) sent
+  `story/basic`, already batched: 230 ids in 5 requests.
+
+## Relaunch cost
+
+| Build | API requests on a relaunch |
+|---|---|
+| Stock | about 25-29 |
+| Default patch set | 3 (profile counts, subscriptions, story update check) |
 
 ## Favorites outage (2026-11-20)
 
