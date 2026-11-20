@@ -21,10 +21,10 @@ import java.util.Set;
  * leader's decoded result through their own callbacks. If the leader fails or is cancelled,
  * followers send their own request instead, so a failure never spreads.
  * <p>
- * Called from code injected by the "Merge duplicate requests" patch.
+ * Called through {@link RequestHooks} when the "Merge duplicate requests" patch is applied.
  */
 @SuppressWarnings("unused")
-public final class RequestDedup {
+final class RequestDedup {
     private static final String TAG = "FFNTao";
     /**
      * Safety net for a leader that disappears without succeeding or failing. Its followers then send
@@ -51,30 +51,6 @@ public final class RequestDedup {
 
     private RequestDedup() {
     }
-
-    // region Placeholders. The patch replaces these bodies with calls into the app's request class.
-
-    /** Returns the request's decoded result. */
-    private static Object getResult(Object request) {
-        throw new IllegalStateException("not patched");
-    }
-
-    /** Stores a decoded result on the request, as the app does before running its callbacks. */
-    private static void setResult(Object request, Object result) {
-        throw new IllegalStateException("not patched");
-    }
-
-    /** Runs the request's callback pipeline with its stored result. */
-    private static void runCallbacks(Object request) {
-        throw new IllegalStateException("not patched");
-    }
-
-    /** Sends the request to the server. */
-    private static void execute(Object request) {
-        throw new IllegalStateException("not patched");
-    }
-
-    // endregion
 
     /**
      * Called when a request is about to be sent.
@@ -116,11 +92,11 @@ public final class RequestDedup {
         }
         if (group == null || group.followers.isEmpty()) return;
 
-        Object result = getResult(request);
+        Object result = RequestHooks.getResult(request);
         for (Object follower : group.followers) {
             try {
-                setResult(follower, result);
-                runCallbacks(follower);
+                RequestHooks.setResult(follower, result);
+                RequestHooks.runCallbacks(follower);
             } catch (Throwable t) {
                 Log.e(TAG, "replay to follower failed, sending it instead", t);
                 send(follower, "replay failed");
@@ -172,7 +148,7 @@ public final class RequestDedup {
         }
         Log.d(TAG, "sending deferred request (" + reason + ") " + shortKey(follower));
         try {
-            execute(follower);
+            RequestHooks.execute(follower);
         } catch (Throwable t) {
             Log.e(TAG, "execute deferred request", t);
         }

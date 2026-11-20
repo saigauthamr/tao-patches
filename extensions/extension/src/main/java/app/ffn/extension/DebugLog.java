@@ -8,7 +8,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Called from code injected by the "Enable debug logging" patch. Logs to logcat under {@link #TAG}.
+ * Called from code injected by the "Enable debug logging" patch, and through {@link RequestHooks}. Logs to logcat under {@link #TAG}.
  * Read with: adb logcat -s FFNTao
  */
 @SuppressWarnings("unused")
@@ -36,9 +36,7 @@ public final class DebugLog {
         Log.w(TAG, "request FAILED after " + elapsed(request) + " " + url(request), error);
     }
 
-    /** The response handler is a coroutine and re-enters on resume; only the first entry is logged. */
-    public static void requestResponded(Object request, Object response) {
-        if (response == null) return;
+    public static void requestResponded(Object request) {
         Log.i(TAG, "request responded after " + elapsed(request) + " " + url(request));
     }
 
@@ -102,23 +100,9 @@ public final class DebugLog {
         return start == null ? "?" : (System.currentTimeMillis() - start) + "ms";
     }
 
-    /** The request URL lives in an obfuscated String field; find it by its value. */
     private static String url(Object request) {
-        for (Class<?> c = request.getClass(); c != null && c != Object.class; c = c.getSuperclass()) {
-            for (Field field : c.getDeclaredFields()) {
-                if (field.getType() != String.class) continue;
-                try {
-                    field.setAccessible(true);
-                    Object value = field.get(request);
-                    if (value instanceof String) {
-                        String s = (String) value;
-                        if (s.startsWith("/api") || s.startsWith("http")) return s;
-                    }
-                } catch (ReflectiveOperationException | RuntimeException ignored) {
-                }
-            }
-        }
-        return "<unknown url>";
+        String url = RequestHooks.url(request);
+        return url == null ? "<unknown url>" : url;
     }
 
     private static String simpleName(Object owner) {

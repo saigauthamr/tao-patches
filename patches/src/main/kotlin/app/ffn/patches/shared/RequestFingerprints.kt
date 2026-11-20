@@ -49,15 +49,6 @@ object RequestConstructorFingerprint : Fingerprint(
     ),
 )
 
-/** The request wrapper's response handler (m4.k.H in 66.5), a suspend function. */
-object RequestResponseFingerprint : Fingerprint(
-    classFingerprint = RequestFailureFingerprint,
-    returnType = "Ljava/lang/Object;",
-    parameters = listOf("L", "L", "L"),
-    filters = listOf(
-        string("onFailure: request canceled"),
-    ),
-)
 
 /** The HTTP/2 client's frame parser (D7.a0.a in 66.5): one instance per frame type, switched on an int field. */
 object FrameParserFingerprint : Fingerprint(
