@@ -1,0 +1,28 @@
+# Upstream app binaries (copyrighted, large) — never commit
+*.apk
+*.apkm
+*.apks
+*.xapk
+
+# Decompiled / extracted output
+/decompiled/
+/extracted/
+/work/
+
+# Build output
+build/
+.gradle/
+*.mpp
+*.rvp
+local.properties
+
+# Keystores / secrets
+*.keystore
+*.jks
+.env
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
