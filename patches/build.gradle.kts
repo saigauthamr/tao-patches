@@ -1,14 +1,13 @@
 group = "app.ffn"
 
 patches {
-    // TODO: Update this section with your project details.
     about {
-        name = "UserXYZ Patches"
-        description = "Patches for apps I like"
-        source = "git@github.com:UserXYZ/morphe-patches.git"
-        author = "Awesome dev"
-        contact = "na"
-        website = "na"
+        name = "Tao Patches"
+        description = "Fewer server requests, no telemetry and a more responsive FanFiction.Net app"
+        source = "git@github.com:saigauthamr/tao-patches.git"
+        author = "saigauthamr"
+        contact = "https://github.com/saigauthamr/tao-patches/issues"
+        website = "https://github.com/saigauthamr/tao-patches"
         license = "GPLv3"
     }
 }

@@ -1,4 +1,4 @@
-rootProject.name = "fanfiction-morphe"
+rootProject.name = "tao-patches"
 
 pluginManagement {
     repositories {
