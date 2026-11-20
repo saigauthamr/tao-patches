@@ -33,12 +33,73 @@ public final class DebugLog {
     }
 
     public static void requestFailed(Object request, Throwable error) {
+        Log.w(TAG, "request FAILED after " + elapsed(request) + " " + url(request), error);
+    }
+
+    /** The response handler is a coroutine and re-enters on resume; only the first entry is logged. */
+    public static void requestResponded(Object request, Object response) {
+        if (response == null) return;
+        Log.i(TAG, "request responded after " + elapsed(request) + " " + url(request));
+    }
+
+    // Handler index of the app's HTTP/2 frame parser -> frame type.
+    private static final String[] FRAME_TYPES =
+            {"DATA", "GOAWAY", "HEADERS", "PING", "RST_STREAM", "SETTINGS", "CONTINUATION?", "WINDOW_UPDATE"};
+
+    /** Called for every HTTP/2 frame received from the API server, before it is parsed. */
+    public static void frameReceived(Object handler, Object header, byte[] payload) {
+        int index = intField(handler, 0);
+        String type = index >= 0 && index < FRAME_TYPES.length ? FRAME_TYPES[index] : "type" + index;
+        StringBuilder line = new StringBuilder("frame <- ").append(type)
+                .append(" stream=").append(longField(header))
+                .append(" h=").append(intField(header, 0)).append("/").append(intField(header, 1)).append("/").append(intField(header, 2))
+                .append(" len=").append(payload == null ? 0 : payload.length);
+        if (payload != null && index != 0 && index != 2) {
+            line.append(" payload=");
+            for (int i = 0; i < Math.min(payload.length, 32); i++) {
+                line.append(String.format("%02x", payload[i]));
+            }
+        }
+        Log.v(TAG, line.toString());
+    }
+
+    /** The n-th declared int field of an obfuscated object. */
+    private static int intField(Object owner, int n) {
+        int seen = 0;
+        for (Field field : owner.getClass().getDeclaredFields()) {
+            if (field.getType() != int.class || java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            if (seen++ == n) {
+                try {
+                    field.setAccessible(true);
+                    return field.getInt(owner);
+                } catch (ReflectiveOperationException e) {
+                    return -1;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /** The first declared long field of an obfuscated object (the frame's stream id). */
+    private static long longField(Object owner) {
+        for (Field field : owner.getClass().getDeclaredFields()) {
+            if (field.getType() != long.class || java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            try {
+                field.setAccessible(true);
+                return field.getLong(owner);
+            } catch (ReflectiveOperationException e) {
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    private static String elapsed(Object request) {
         Long start;
         synchronized (startTimes) {
             start = startTimes.remove(request);
         }
-        String elapsed = start == null ? "?" : (System.currentTimeMillis() - start) + "ms";
-        Log.w(TAG, "request FAILED after " + elapsed + " " + url(request), error);
+        return start == null ? "?" : (System.currentTimeMillis() - start) + "ms";
     }
 
     /** The request URL lives in an obfuscated String field; find it by its value. */

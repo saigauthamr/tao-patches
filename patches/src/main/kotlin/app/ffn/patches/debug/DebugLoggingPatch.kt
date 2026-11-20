@@ -1,6 +1,10 @@
 package app.ffn.patches.debug
 
 import app.ffn.patches.shared.Constants.COMPATIBILITY_FANFICTION
+import app.ffn.patches.shared.FrameParserFingerprint
+import app.ffn.patches.shared.RequestExecuteFingerprint
+import app.ffn.patches.shared.RequestFailureFingerprint
+import app.ffn.patches.shared.RequestResponseFingerprint
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.mutableClassDefBy
 import app.morphe.patcher.patch.patch
@@ -41,6 +45,17 @@ val debugLoggingPatch = patch(
         RequestFailureFingerprint.method.addInstructions(
             0,
             "invoke-static { p0, p2 }, $EXTENSION_CLASS->requestFailed(Ljava/lang/Object;Ljava/lang/Throwable;)V",
+        )
+
+        RequestResponseFingerprint.method.addInstructions(
+            0,
+            "invoke-static { p0, p2 }, $EXTENSION_CLASS->requestResponded(Ljava/lang/Object;Ljava/lang/Object;)V",
+        )
+
+        // Uses many registers, so the parameters must be passed with a range call.
+        FrameParserFingerprint.method.addInstructions(
+            0,
+            "invoke-static/range { p0 .. p2 }, $EXTENSION_CLASS->frameReceived(Ljava/lang/Object;Ljava/lang/Object;[B)V",
         )
     }
 }
