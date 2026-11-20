@@ -3,12 +3,12 @@ package app.ffn.patches.favorites
 import app.ffn.patches.shared.Constants.COMPATIBILITY_FANFICTION
 import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.InstructionLocation.MatchAfterImmediately
-import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.fieldAccess
 import app.morphe.patcher.patch.patch
 import app.morphe.patcher.patch.stringOption
 import app.morphe.patcher.string
+import app.morphe.patcher.util.addInstructionsAtControlFlowLabel
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
@@ -60,7 +60,8 @@ val favoritesLetterFilterPatch = patch(
             val (free1, screen) = prefixRead.getInstruction<TwoRegisterInstruction>().let { i -> i.registerA to i.registerB }
             val free2 = it.instructionMatches[1].getInstruction<OneRegisterInstruction>().registerA
 
-            it.method.addInstructions(
+            // The prefix read is a branch target, so the check must take over its label.
+            it.method.addInstructionsAtControlFlowLabel(
                 prefixRead.index,
                 """
                     iget v$free1, v$screen, $listTypeField
