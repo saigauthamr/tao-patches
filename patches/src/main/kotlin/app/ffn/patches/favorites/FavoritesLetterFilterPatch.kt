@@ -47,9 +47,9 @@ val favoritesLetterFilterPatch = patch(
         key = "letter",
         default = "A",
         title = "Starting letter",
-        description = "Title letter the favorite stories list opens with.",
+        description = "Title letter the favorite stories list opens with, or # for titles starting with a non-letter.",
         required = true,
-    ) { it != null && it.length == 1 && it[0].isLetter() }
+    ) { it != null && it.length == 1 && (it[0].isLetter() || it == "#") }
 
     execute {
         UserStoryListLoadFingerprint.let {

@@ -26,8 +26,11 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public final class RequestDedup {
     private static final String TAG = "FFNTao";
-    /** Followers whose leader has not finished by then send their own request. */
-    private static final long FOLLOWER_TIMEOUT_MS = 60_000;
+    /**
+     * Safety net for a leader that disappears without succeeding or failing. Its followers then send
+     * their own request. Longer than any request timeout, so a slow leader is never duplicated.
+     */
+    private static final long FOLLOWER_TIMEOUT_MS = 600_000;
 
     private static final Object lock = new Object();
     private static final Map<String, Group> groupsByKey = new HashMap<>();
@@ -210,8 +213,8 @@ public final class RequestDedup {
         }
         if (value.getClass().isArray()) return arrayText(value, depth);
         if (hasOwnToString(value)) return value.getClass().getName() + "=" + value;
-        // The app's outgoing request packets (networkpacket.Out_*) are plain data without toString.
-        if (value.getClass().getName().contains(".networkpacket.Out_")) return fieldsText(value, depth);
+        // The app's request packets and filters (networkpacket.*) are plain data without toString.
+        if (value.getClass().getName().contains(".networkpacket.")) return fieldsText(value, depth);
         return null;
     }
 
