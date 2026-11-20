@@ -143,3 +143,9 @@ local.properties
 *.jks
 .env
 .DS_Store
+
+# IDE / language server build output
+bin/
+.project
+.settings/
+.classpath
