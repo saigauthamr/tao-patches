@@ -69,3 +69,17 @@ object FrameParserFingerprint : Fingerprint(
         literal(2147483647L),
     ),
 )
+
+/**
+ * The part of the response handler (m4.k.H in 66.5) that stores the decoded result in the base
+ * request class (f4.N.o0) and then runs the base class callback pipeline (invoke-super f4.N.j).
+ */
+object RequestResultFingerprint : Fingerprint(
+    classFingerprint = RequestFailureFingerprint,
+    returnType = "Ljava/lang/Object;",
+    parameters = listOf("L", "L", "L"),
+    filters = listOf(
+        fieldAccess(opcode = Opcode.IPUT_OBJECT, type = "Ljava/lang/Object;"),
+        methodCall(opcode = Opcode.INVOKE_SUPER),
+    ),
+)
